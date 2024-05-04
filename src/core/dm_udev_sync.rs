@@ -354,9 +354,13 @@ pub mod sync_semaphore {
         /// this UdevSync instance and destroy the semaphore on success.
         fn end(self, flags: u32) -> DmResult<()> {
             if self.is_active() {
+                println!("KS (devmapper) sync_end is_active=true");
                 let semid = self.semid.expect("active UdevSync must have valid semid");
+
+                println!("KS (devmapper) before 'if' statement");
                 if (flags & DmFlags::DM_UEVENT_GENERATED.bits()) == 0 {
                     if let Err(err) = notify_sem_dec(self.cookie, semid) {
+                        println!("KS (devmapper) sync end error 1");
                         error!("Failed to clear notification semaphore state: {}", err);
                         if let Err(err2) = notify_sem_destroy(self.cookie, semid) {
                             error!("Failed to clean up notification semaphore: {}", err2);
@@ -364,8 +368,10 @@ pub mod sync_semaphore {
                         return Err(err);
                     }
                 }
+                println!("KS (devmapper) waiting on sem");
                 trace!("Waiting on {:?}", self);
                 notify_sem_wait(self.cookie, semid)?;
+                println!("KS (devmapper) destroying sem");
                 trace!("Destroying {:?}", self);
                 if let Err(err) = notify_sem_destroy(self.cookie, semid) {
                     error!("Failed to clean up notification semaphore: {}", err);
