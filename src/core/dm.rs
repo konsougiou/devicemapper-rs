@@ -131,6 +131,7 @@ impl DM {
         // Begin udev sync transaction and set DM_UDEV_PRIMARY_SOURCE_FLAG
         // if ioctl command generates uevents.
         let sync = UdevSync::begin(hdr, ioctl)?;
+        println!("KS (devmapper) udev sync begin");
 
         let data_size = cmp::max(
             MIN_BUF_SIZE,
@@ -139,6 +140,7 @@ impl DM {
 
         let mut buffer: Vec<u8> = Vec::with_capacity(data_size);
         let mut buffer_hdr;
+        println!("KS (devmapper) do_ioctl loop entered");
         loop {
             hdr.data_size = buffer.capacity() as u32;
 
@@ -185,11 +187,13 @@ impl DM {
             }
             buffer.resize((len as u32).saturating_mul(2) as usize, 0);
         }
+        println!("KS (devmapper) do_ioctl loop exit");
 
         let data_end = cmp::max(buffer_hdr.data_size, buffer_hdr.data_start);
 
         // Synchronize with udev event processing
         sync.end(buffer_hdr.flags)?;
+        println!("KS (devmapper) udev sync end");
         Ok((
             DeviceInfo::try_from(*buffer_hdr)?,
             buffer[buffer_hdr.data_start as usize..data_end as usize].to_vec(),
@@ -327,6 +331,7 @@ impl DM {
         uuid: Option<&DmUuid>,
         options: DmOptions,
     ) -> DmResult<DeviceInfo> {
+        println!("KS (devmapper) device create called");
         let mut hdr =
             options.to_ioctl_hdr(None, DmFlags::DM_READONLY | DmFlags::DM_PERSISTENT_DEV)?;
 
@@ -448,6 +453,7 @@ impl DM {
     /// dm.device_suspend(&id, DmOptions::default().set_flags(DmFlags::DM_SUSPEND)).unwrap();
     /// ```
     pub fn device_suspend(&self, id: &DevId<'_>, options: DmOptions) -> DmResult<DeviceInfo> {
+        println!("KS (image-rs) suspend device called");
         let mut hdr = options.to_ioctl_hdr(
             Some(id),
             DmFlags::DM_SUSPEND | DmFlags::DM_NOFLUSH | DmFlags::DM_SKIP_LOCKFS,
@@ -528,6 +534,7 @@ impl DM {
         targets: &[(u64, u64, String, String)],
         options: DmOptions,
     ) -> DmResult<DeviceInfo> {
+        println!("KS (devmapper) table load called");
         let mut cursor = Cursor::new(Vec::new());
 
         // Construct targets first, since we need to know how many & size
