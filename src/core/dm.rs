@@ -131,7 +131,7 @@ impl DM {
         // Begin udev sync transaction and set DM_UDEV_PRIMARY_SOURCE_FLAG
         // if ioctl command generates uevents.
         let sync = UdevSync::begin(hdr, ioctl)?;
-        println!("KS (devmapper) udev sync begin");
+        println!("KS (devmapper) udev sync begin with hdr: {:?}", hdr);
 
         let data_size = cmp::max(
             MIN_BUF_SIZE,
@@ -190,6 +190,8 @@ impl DM {
         println!("KS (devmapper) do_ioctl loop exit");
 
         let data_end = cmp::max(buffer_hdr.data_size, buffer_hdr.data_start);
+
+        println!("KS (devmapper) calling udev sync end with buff_hdr: {:?}", buffer_hdr);
 
         // Synchronize with udev event processing
         sync.end(buffer_hdr.flags)?;
