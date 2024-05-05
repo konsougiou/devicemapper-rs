@@ -272,12 +272,14 @@ pub mod sync_semaphore {
                 error!("Failed to clean up udev notification semaphore: {}", err2);
             }
         }
+        println!("KS (devmapper) notify sem wait executed sem_decrement");
         let mut sb = sembuf {
             sem_num: 0,
             sem_op: 0,
             sem_flg: 0,
         };
         let r = unsafe { libc_semop(semid, &mut sb, 1) };
+        println!("KS (devmapper) notify sem wait executed libc_semop");
         match r {
             i if i < 0 => {
                 error!(
@@ -320,6 +322,9 @@ pub mod sync_semaphore {
             };
 
             let (base_cookie, semid) = notify_sem_create()?;
+
+            println!("KS (devmapper) notify sem created with semid: {:?}, cookie: {:?}", semid, base_cookie);
+
 
             // Encode the primary source flag and the random base cookie value into
             // the header event_nr input field.
